@@ -1,0 +1,65 @@
+name: Snowflake CI/CD Pipeline
+
+on:
+  push:
+    branches: [dev, qa, prod]
+    paths:
+     - 'DEV/**'
+     - 'QA/**'
+     - 'PROD/**'
+
+env:
+  SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+  SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+  SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+    
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Install Liquibase
+      run: |
+        wget https://github.com/liquibase/liquibase/releases/download/v4.28.0/liquibase-4.28.0.tar.gz
+        mkdir liquibase && tar -xzf liquibase-4.28.0.tar.gz -C liquibase
+        echo "${{ github.workspace }}/liquibase" >> $GITHUB_PATH
+
+    - name: Identify new changelog file
+      run: |
+        base_sha=$(git rev-parse HEAD^)
+        echo "Base SHA: $base_sha"
+        echo "Current SHA: ${{ github.sha }}"
+        new_changelog=$(git diff --name-only $base_sha HEAD | grep -E '[0-9]{8}_.*_chg_log\.xml$')
+        echo "Detected changelog files:"
+        echo "$new_changelog"
+        changelog_count=$(echo "$new_changelog" | wc -l)
+        echo "Number of changelog files: $changelog_count"
+        if [ $(echo "$new_changelog" | wc -l) -ne 1 ]; then
+          echo "Error: Expected exactly one new changelog file, found $(echo "$new_changelog" | wc -l)"
+          exit 1
+        fi
+        
+        echo "NEW_CHANGELOG=$new_changelog" >> $GITHUB_ENV
+
+    - name: Deploy to Snowflake
+      env:
+        SNOWFLAKE_DATABASE: ${{ (github.ref == 'refs/heads/dev' || github.base_ref == 'dev') && 'DEV' || (github.ref == 'refs/heads/qa' || github.base_ref == 'qa') && 'QA' || (github.ref == 'refs/heads/main' || github.base_ref == 'main') && 'PROD' }}
+      run: |
+        liquibase \
+          --driver=com.snowflake.client.jdbc.SnowflakeDriver \
+          --classpath=${{ github.workspace }}/liquibase/internal/lib/snowflake-jdbc.jar \
+          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=CONFIG&role=ACCOUNTADMIN&warehouse=COMPUTE_WH" \
+          --username=$SNOWFLAKE_USER \
+          --password=$SNOWFLAKE_PASSWORD \
+          --logLevel=info \
+          --changeLogFile="$pwd"/"$NEW_CHANGELOG" \
+          update
