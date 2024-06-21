@@ -4,7 +4,7 @@ on:
   push:
     branches: [dev, qa, prod]
     paths:
-     - 'DEV/**'
+     - 'DB/changelog_files/**'
 
 env:
   SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
