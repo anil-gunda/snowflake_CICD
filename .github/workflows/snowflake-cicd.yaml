@@ -50,7 +50,7 @@ jobs:
 
     - name: Deploy to Snowflake
       env:
-        SNOWFLAKE_DATABASE: ${{ (github.ref == 'refs/heads/dev' || github.base_ref == 'dev') && 'DEV' || (github.ref == 'refs/heads/qa' || github.base_ref == 'qa') && 'QA' || (github.ref == 'refs/heads/main' || github.base_ref == 'main') && 'PROD' }}
+        SNOWFLAKE_DATABASE: ${{ (github.ref == 'refs/heads/dev' || github.base_ref == 'dev') && 'DEV' || (github.ref == 'refs/heads/qa' || github.base_ref == 'qa') && 'QA' || (github.ref == 'refs/heads/prod' || github.base_ref == 'prod') && 'PROD' }}
       run: |
         liquibase \
           --driver=com.snowflake.client.jdbc.SnowflakeDriver \
