@@ -6,13 +6,11 @@ on:
     paths:
      - 'DB/changelog_files/**'
 
-env:
-  SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-  SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-  SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-
 jobs:
   deploy:
+    name: Deploy to ${{ github.ref_name }}
+    environment:
+      name: ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -50,12 +48,18 @@ jobs:
 
     - name: Deploy to Snowflake
       env:
-        SNOWFLAKE_DATABASE: ${{ (github.ref == 'refs/heads/dev' || github.base_ref == 'dev') && 'DEV' || (github.ref == 'refs/heads/qa' || github.base_ref == 'qa') && 'QA' || (github.ref == 'refs/heads/prod' || github.base_ref == 'prod') && 'PROD' }}
+        SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
+        SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+        SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+        SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+        SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+        SNOWFAKE_DEFAULT_SCHEMA: ${{ vars.SNOWFAKE_DEFAULT_SCHEMA }}
       run: |
         liquibase \
           --driver=com.snowflake.client.jdbc.SnowflakeDriver \
           --classpath=${{ github.workspace }}/liquibase/internal/lib/snowflake-jdbc.jar \
-          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=CONFIG&role=ACCOUNTADMIN&warehouse=COMPUTE_WH" \
+          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=$SNOWFAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
           --username=$SNOWFLAKE_USER \
           --password=$SNOWFLAKE_PASSWORD \
           --logLevel=info \
