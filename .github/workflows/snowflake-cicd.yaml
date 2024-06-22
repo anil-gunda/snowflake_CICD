@@ -46,6 +46,11 @@ jobs:
         
         echo "NEW_CHANGELOG=$new_changelog" >> $GITHUB_ENV
 
+    - name: Set up private key
+      run: |
+        echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > rsa_liquibase_key.p8
+        chmod 600 rsa_liquibase_key.p8
+
     - name: Deploy to Snowflake
       env:
         SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
@@ -59,9 +64,7 @@ jobs:
         liquibase \
           --driver=com.snowflake.client.jdbc.SnowflakeDriver \
           --classpath=${{ github.workspace }}/liquibase/internal/lib/snowflake-jdbc.jar \
-          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=$SNOWFLAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
-          --username=$SNOWFLAKE_USER \
-          --password=$SNOWFLAKE_PASSWORD \
+          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?private_key_file=file:rsa_liquibase_key.p8&private_key_file_pwd=LiQuibase@^123&db=$SNOWFLAKE_DATABASE&schema=$SNOWFLAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
           --logLevel=info \
           --changeLogFile="$pwd"/"$NEW_CHANGELOG" \
           update
