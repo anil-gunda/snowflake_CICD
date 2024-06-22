@@ -61,11 +61,12 @@ jobs:
         SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
         SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
         SNOWFLAKE_DEFAULT_SCHEMA: ${{ vars.SNOWFLAKE_DEFAULT_SCHEMA }}
+        SF_PRIVATE_KEY_PASSWORD: ${{ secrets.SF_PRIVATE_KEY_PASSWORD}}
       run: |
         liquibase \
           --driver=com.snowflake.client.jdbc.SnowflakeDriver \
           --classpath=${{ github.workspace }}/liquibase/internal/lib/snowflake-jdbc.jar \
-          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?private_key_file=./rsa_liquibase_key.p8&private_key_file_pwd=LiQuibase@^123&db=$SNOWFLAKE_DATABASE&schema=$SNOWFLAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
+          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?private_key_file=./rsa_liquibase_key.p8&private_key_file_pwd=$SF_PRIVATE_KEY_PASSWORD@^123&db=$SNOWFLAKE_DATABASE&schema=$SNOWFLAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
           --logLevel=info \
           --changeLogFile="$pwd"/"$NEW_CHANGELOG" \
           update
