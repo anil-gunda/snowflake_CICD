@@ -54,12 +54,12 @@ jobs:
         SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
         SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
         SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-        SNOWFAKE_DEFAULT_SCHEMA: ${{ vars.SNOWFAKE_DEFAULT_SCHEMA }}
+        SNOWFLAKE_DEFAULT_SCHEMA: ${{ vars.SNOWFLAKE_DEFAULT_SCHEMA }}
       run: |
         liquibase \
           --driver=com.snowflake.client.jdbc.SnowflakeDriver \
           --classpath=${{ github.workspace }}/liquibase/internal/lib/snowflake-jdbc.jar \
-          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=$SNOWFAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
+          --url="jdbc:snowflake://$SNOWFLAKE_ACCOUNT.snowflakecomputing.com/?db=$SNOWFLAKE_DATABASE&schema=$SNOWFLAKE_DEFAULT_SCHEMA&role=$SNOWFLAKE_ROLE&warehouse=$SNOWFLAKE_WAREHOUSE" \
           --username=$SNOWFLAKE_USER \
           --password=$SNOWFLAKE_PASSWORD \
           --logLevel=info \
