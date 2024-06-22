@@ -50,6 +50,7 @@ jobs:
       run: |
         echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > rsa_liquibase_key.p8
         chmod 600 rsa_liquibase_key.p8
+        ls -lart
 
     - name: Deploy to Snowflake
       env:
